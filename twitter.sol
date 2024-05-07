@@ -3,7 +3,10 @@ pragma solidity ^0.8.25;
 
 contract twitter {
 
+    uint16 public  MAX_TWEET_LENGTH = 280;// declaring the maximum length of the tweet 'constant'.
+
         struct tweet{
+             uint256 id;
              address author;
              string content;
              uint256 timestamp;
@@ -11,9 +14,33 @@ contract twitter {
         }
 
     mapping (address => tweet[]) public tweets; //declares a mapping named tweets.
+     address public owner;
+
+     constructor(){
+      owner = msg.sender;
+     }
+     modifier onlyOwner(){
+      require(msg.sender == owner,"you are not the owner");
+      _;
+     }
+
+
+
+
+     function changeTweetLength(uint16 newTweetLength) public onlyOwner{
+            MAX_TWEET_LENGTH  = newTweetLength ;
+     }
+
+
     function createTweet(string memory _tweet) public {
+
+
+      require(bytes(_tweet).length<=MAX_TWEET_LENGTH,"this tweet is too large bro!!");// limit the length of tweet using require
+
+
          tweet memory newTweet = tweet({
-            author: msg.sender,
+            id : tweets[msg.sender].length,
+             author: msg.sender,
             content: _tweet,
             timestamp: block.timestamp,// did this since data is coming directly from the block.
             likes:0
@@ -21,6 +48,17 @@ contract twitter {
 
 
         tweets[msg.sender].push(newTweet); //assigns the value of the _tweet argument to the key msg.sender in the tweets mapping.
+    }
+
+    function likeTweet(address author, uint256 id) external {
+      require(tweets[author][id].id == id,"TWEET DOES NOT EXIST");//to confirm the the tweet really exists and someone is not randomly trying to break the contract.
+         tweets[author][id].likes++;
+    }
+
+    function unLikeTweet(address author, uint256 id) external{
+            require(tweets[author][id].id == id,"TWEET DOES NOT EXIST");
+            require(tweets[author][id].likes > 0,"TWEET HAVE NO LIKES");// this functionality confirms that the tweet will have -ve likes.
+            tweets[author][id].likes--;
     }
 
     function getTweet(address _owner,uint _i) view  public returns (tweet memory){
@@ -33,3 +71,4 @@ contract twitter {
 
 
 }
+
