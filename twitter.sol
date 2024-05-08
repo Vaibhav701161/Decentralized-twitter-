@@ -1,4 +1,5 @@
-//SPDX-License-Identifier: GPL-3.0
+
+    //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.25;
 
 contract twitter {
@@ -15,6 +16,10 @@ contract twitter {
 
     mapping (address => tweet[]) public tweets; //declares a mapping named tweets.
      address public owner;
+
+     event tweetCreated(uint256 id, address author, string content, uint256 timestamp);
+     event tweetLiked( address liker , address tweetAuthor  , uint256 tweetId, uint256 newLikeCount);
+     event tweetUnLiked( address unliker , address tweetAuthor  , uint256 tweetId, uint256 newLikeCount);
 
      constructor(){
       owner = msg.sender;
@@ -48,17 +53,25 @@ contract twitter {
 
 
         tweets[msg.sender].push(newTweet); //assigns the value of the _tweet argument to the key msg.sender in the tweets mapping.
+    
+         emit tweetCreated(newTweet.id, newTweet.author, newTweet.content, newTweet.timestamp);
     }
+      
+         
 
     function likeTweet(address author, uint256 id) external {
       require(tweets[author][id].id == id,"TWEET DOES NOT EXIST");//to confirm the the tweet really exists and someone is not randomly trying to break the contract.
          tweets[author][id].likes++;
+
+         emit tweetLiked(msg.sender,author,id,tweets[author][id].likes);
     }
 
     function unLikeTweet(address author, uint256 id) external{
             require(tweets[author][id].id == id,"TWEET DOES NOT EXIST");
             require(tweets[author][id].likes > 0,"TWEET HAVE NO LIKES");// this functionality confirms that the tweet will have -ve likes.
             tweets[author][id].likes--;
+
+             emit tweetUnLiked(msg.sender,author,id,tweets[author][id].likes);
     }
 
     function getTweet(address _owner,uint _i) view  public returns (tweet memory){
@@ -71,4 +84,3 @@ contract twitter {
 
 
 }
-
